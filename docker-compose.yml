@@ -1,0 +1,72 @@
+services:
+
+  # PostgreSQL
+  stock-db:
+    image: postgres:15
+    container_name: stock-db
+    environment:
+      POSTGRES_DB: stockdb
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: admin123
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./db/create_schema.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - stock-network
+
+  # Redis
+  redis:
+    image: redis:7
+    container_name: stock-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redisdata:/data
+    networks:
+      - stock-network
+
+  # Kafka (KRaft mode)
+  kafka:
+    image: docker.io/bitnami/kafka:3.9
+    container_name: kafka
+    ports:
+      - "9092:9092"
+    volumes:
+      - kafka_data:/bitnami
+    environment:
+      - KAFKA_CFG_NODE_ID=0
+      - KAFKA_CFG_PROCESS_ROLES=controller,broker
+      - KAFKA_CFG_CONTROLLER_QUORUM_VOTERS=0@kafka:9093
+      - KAFKA_CFG_LISTENERS=PLAINTEXT://:9092,CONTROLLER://:9093
+      - KAFKA_CFG_ADVERTISED_LISTENERS=PLAINTEXT://localhost:9092   # 👈 Host access
+      - KAFKA_CFG_LISTENER_SECURITY_PROTOCOL_MAP=CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT
+      - KAFKA_CFG_CONTROLLER_LISTENER_NAMES=CONTROLLER
+      - KAFKA_CFG_INTER_BROKER_LISTENER_NAME=PLAINTEXT
+    networks:
+      - stock-network
+
+  # pgAdmin
+  pgadmin:
+    image: dpage/pgadmin4
+    container_name: pgadmin
+    environment:
+      PGADMIN_DEFAULT_EMAIL: user@domain.com
+      PGADMIN_DEFAULT_PASSWORD: SuperSecret
+    ports:
+      - "80:80"
+    depends_on:
+      - stock-db
+    networks:
+      - stock-network
+
+volumes:
+  pgdata:
+  redisdata:
+  kafka_data:
+    driver: local
+
+networks:
+  stock-network:
+    driver: bridge
