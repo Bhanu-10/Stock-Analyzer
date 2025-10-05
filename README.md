@@ -12,7 +12,7 @@ A Java Spring Boot project that demonstrates how to build a real-time stock pric
 
 ✅ WebSockets (STOMP/SockJS) – to push live updates to browser clients
 
-✅ Docker Compose – to run Kafka, Zookeeper, Postgres, and Redis easily in dev
+✅ Docker Compose – to run Kafka, Postgres, and Redis easily in dev
 
 🚀 Features
 
